@@ -1,5 +1,8 @@
+import sys
 from distutils.core import setup
 import py2exe
+
+sys.path.append("application")
 
 setup(name='MMetering Tester',
       version='0.1',
