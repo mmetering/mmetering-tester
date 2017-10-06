@@ -9,5 +9,10 @@ setup(name='MMetering Tester',
       author_email='info@mmetering.chrisonntag.com',
       url='https://mmetering.chrisonntag.com/',
       install_requires=['minimalmodbus', 'pyserial'],
-      console=['application.main.py'],
-      )
+      console=['application/main.py'],
+      windows=[{'script': 'application/main.py'}],
+      options={"py2exe": {"includes": ["serial", "tkinter", \
+            "minimalmodbus", "sys", "threading"], \
+            'bundle_files': 3, 'compressed': False}}, \
+            zipfile = None
+    )

@@ -2,8 +2,8 @@ import sys, glob, serial
 import tkinter as tk
 import tkinter.ttk as ttk
 import serial.tools.list_ports
-from redirectors import TextRedirector
-from SDM630 import Meter
+from application.redirectors import TextRedirector
+from application.SDM630 import Meter
 import threading
 
 
