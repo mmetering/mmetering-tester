@@ -2,16 +2,43 @@ import sys, glob, serial
 import tkinter as tk
 import tkinter.ttk as ttk
 import serial.tools.list_ports
-from redirectors import TextRedirector
-from SDM630 import Meter
+import redirectors as redirectors
+import SDM630 as hardware
 import threading
 
 
-class MeterTester(tk.Tk):
+class MeterTester(threading.Thread):
+    def __init__(self, port):
+        """
+        Setup thread for checking connected meters.
+        """
+        threading.Thread.__init__(self)
+        self.port = port
+        self.stop_request = threading.Event()
+
+    def run(self):
+        print("Testing Meters 1-36\nPort: %s\n\n" % self.port)
+
+        for i in range(1, 37):
+            if not self.stop_request.is_set():
+                meter = hardware.Meter(i, i, self.port)
+                if i == 1:
+                    print(meter.instrument)
+                if meter.is_reachable():
+                    print("✅ Meter %d is connected" % i)
+                else:
+                    print("❌ Can't reach Meter %d" % i)
+
+
+class Application(tk.Tk):
     def __init__(self):
+        """
+        Setup all required GUI elements binding methods.
+        """
         tk.Tk.__init__(self)
         self.title("MMetering - Tester")
         self.selected = tk.StringVar()
+        self.checking_thread = None
 
         top_frame = tk.Frame(self, bd=2)
         bottom_frame = tk.Frame(self, bd=2)
@@ -33,24 +60,31 @@ class MeterTester(tk.Tk):
 
         self.stop_btn = tk.Button(top_frame, text='Stop', command=self.stop_thread)
         self.stop_btn.pack(side="right")
-        self.start_btn = tk.Button(top_frame, text='Start', command=lambda: threading.Thread(target=self.check_meters).start())
+        self.start_btn = tk.Button(top_frame, text='Start', command=self.start_thread)
         self.start_btn.pack(side="right")
 
-        sys.stdout = TextRedirector(self.text_box, "stdout")
-        sys.stderr = TextRedirector(self.text_box, "stderr")
+        sys.stdout = redirectors.TextRedirector(self.text_box, "stdout")
+        sys.stderr = redirectors.TextRedirector(self.text_box, "stderr")
 
-        self.exit_thread = False
+    def start_thread(self):
+        if self.selected.get() is not '':
+            self.checking_thread = MeterTester(self.selected.get())
+            self.checking_thread.start()
+        else:
+            print("Select port.")
 
     def stop_thread(self):
-        self.exit_thread = True
+        self.checking_thread.stop_request.set()
+        print('Stopping...')
 
     def get_ports(self):
-        """ Lists serial port names
+        """ 
+        List serial port names on multiple platforms.
 
-            :raises EnvironmentError:
-                On unsupported or unknown platforms
-            :returns:
-                A list of the serial ports available on the system
+        :raises EnvironmentError:
+            On unsupported or unknown platforms
+        :returns:
+            A list of the serial ports available on the system
         """
         if sys.platform.startswith('win'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -72,20 +106,7 @@ class MeterTester(tk.Tk):
                 pass
         return result
 
-    def check_meters(self):
-        print("Testing Meters 1-36\nPort: %s\n\n" % self.selected.get())
-        while not self.exit_thread:
-            for i in range(1, 37):
-                meter = Meter(i, i, self.selected.get())
-                if i == 1:
-                    print(meter.instrument)
-                if meter.is_reachable():
-                    print("✅ Meter %d is connected" % i)
-                else:
-                    print("❌ Can't reach Meter %d" % i)
-
 
 if __name__ == '__main__':
-    app = MeterTester()
+    app = Application()
     app.mainloop()
-
