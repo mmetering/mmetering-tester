@@ -6,20 +6,21 @@ import redirectors as redirectors
 import SDM630 as hardware
 import threading
 
-
 class MeterTester(threading.Thread):
-    def __init__(self, port):
+    def __init__(self, port, start_num, end_num):
         """
         Setup thread for checking connected meters.
         """
         threading.Thread.__init__(self)
         self.port = port
         self.stop_request = threading.Event()
+        self.start_num = start_num
+        self.end_num = end_num
 
     def run(self):
         print("Testing Meters 1-36\nPort: %s\n\n" % self.port)
 
-        for i in range(1, 37):
+        for i in range(self.start_num, self.end_num + 1):
             if not self.stop_request.is_set():
                 meter = hardware.Meter(i, i, self.port)
                 if i == 1:
@@ -45,7 +46,7 @@ class Application(tk.Tk):
         top_frame.pack(fill="x")
         bottom_frame.pack(fill="x")
 
-        label = tk.Label(top_frame, text="Select Port: ")
+        label = tk.Label(top_frame, text="Port: ")
         label.pack(side="left")
         self.cb = ttk.Combobox(top_frame, textvariable=self.selected, values=self.get_ports())
         self.cb.pack(side="left", fill="x")
@@ -63,15 +64,25 @@ class Application(tk.Tk):
         self.start_btn = tk.Button(top_frame, text='Start', command=self.start_thread)
         self.start_btn.pack(side="right")
 
+        self.end_num = tk.Entry(top_frame)
+        self.end_num_label = tk.Label(text='To: ')
+        self.start_num = tk.Entry(top_frame)
+        self.start_num_label = tk.Label(text='From: ')
+        self.start_num.pack(side="right")
+        self.start_num_label.pack(side="right")
+        self.end_num.pack(side="right")
+        self.end_num_label.pack(side="right")
+
+
         sys.stdout = redirectors.TextRedirector(self.text_box, "stdout")
         sys.stderr = redirectors.TextRedirector(self.text_box, "stderr")
 
     def start_thread(self):
         if self.selected.get() is not '':
-            self.checking_thread = MeterTester(self.selected.get())
+            self.checking_thread = MeterTester(self.selected.get(), 1, 36)
             self.checking_thread.start()
         else:
-            print("Select port.")
+            print("Select port and range.")
 
     def stop_thread(self):
         self.checking_thread.stop_request.set()

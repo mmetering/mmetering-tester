@@ -1,5 +1,7 @@
 import minimalmodbus
 import datetime
+from serial.serialutil import SerialException
+from time import sleep
 
 class Meter:
     def __init__(self, id, address, port, start=None, end=None):
@@ -13,7 +15,7 @@ class Meter:
         # port name, slave address (in decimal)
         self.instrument = minimalmodbus.Instrument(port, address)
         self.instrument.debug = False
-        self.instrument.serial.timeout = 2.0 #sec
+        self.instrument.serial.timeout = 1.0 #sec
         self.instrument.serial.baudrate = 19200 # Baud
         self.instrument.serial.bytesize = 8
         self.instrument.serial.parity   = minimalmodbus.serial.PARITY_NONE
@@ -39,4 +41,6 @@ class Meter:
         except RuntimeError:
             print("There has been an runtime error", file=sys.stderr)
             print("Exception: ", exc_info=True, file=sys.stderr)
+        finally:
+            sleep(2)
 
