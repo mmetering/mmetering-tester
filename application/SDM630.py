@@ -21,7 +21,9 @@ class Meter:
         self.instrument.handle_local_echo = False
 
     def is_reachable(self):
-        return self.getHoldingRegister('0x1E', 2) == 3.0
+        return self.getInputRegister('0x48', 2)
+        # Alternatively test baud rate from holding register
+        # return self.getHoldingRegister('0x1C', 2) == 3.0
 
     def getHoldingRegister(self, hexc, length):
         return self.getRegister(hexc, 3, length)

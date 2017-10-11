@@ -78,7 +78,7 @@ class Application(tk.Tk):
         print('Stopping...')
 
     def get_ports(self):
-        """ 
+        """
         List serial port names on multiple platforms.
 
         :raises EnvironmentError:
