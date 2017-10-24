@@ -18,7 +18,7 @@ class MeterTester(threading.Thread):
         self.end_num = end_num
 
     def run(self):
-        print("Testing Meters 1-36\nPort: %s\n\n" % self.port)
+        print("Testing Meters {}-{}\nPort: {}\n\n".format(self.start_num, self.end_num, self.port))
 
         for i in range(self.start_num, self.end_num + 1):
             if not self.stop_request.is_set():
@@ -64,14 +64,14 @@ class Application(tk.Tk):
         self.start_btn = tk.Button(top_frame, text='Start', command=self.start_thread)
         self.start_btn.pack(side="right")
 
-        self.end_num = tk.Entry(top_frame)
-        self.end_num_label = tk.Label(text='To: ')
+        self.start_num_label = tk.Label(top_frame, text='From: ')
+        self.start_num_label.pack(side="left")
         self.start_num = tk.Entry(top_frame)
-        self.start_num_label = tk.Label(text='From: ')
-        self.start_num.pack(side="right")
-        self.start_num_label.pack(side="right")
-        self.end_num.pack(side="right")
-        self.end_num_label.pack(side="right")
+        self.start_num.pack(side="left")
+        self.end_num_label = tk.Label(top_frame, text='To: ')
+        self.end_num_label.pack(side="left")
+        self.end_num = tk.Entry(top_frame)
+        self.end_num.pack(side="left")
 
 
         sys.stdout = redirectors.TextRedirector(self.text_box, "stdout")
@@ -79,14 +79,17 @@ class Application(tk.Tk):
 
     def start_thread(self):
         if self.selected.get() is not '':
-            self.checking_thread = MeterTester(self.selected.get(), 1, 36)
+            self.checking_thread = MeterTester(self.selected.get(), int(self.start_num.get()), int(self.end_num.get()))
             self.checking_thread.start()
         else:
             print("Select port and range.")
 
     def stop_thread(self):
-        self.checking_thread.stop_request.set()
-        print('Stopping...')
+        if self.checking_thread is not None:
+            self.checking_thread.stop_request.set()
+            print('Stopping...')
+        else:
+            print('No thread started.')
 
     def get_ports(self):
         """
